@@ -7,8 +7,8 @@ const port = process.env.PORT || 1338;
 const corsOptions = {
   origin: [
     "https://new.evolution2art.com",
+    "https://backend.evolution2art.com",
     "https://evolution2art.com",
-    "https://evolution2art.eu",
   ],
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
@@ -44,10 +44,8 @@ async function getPayPalToken() {
 }
 
 async function validatatePayPalOrder(pp) {
-  console.log("Validate order", pp);
   const link = pp.links.shift();
   const auth = await getPayPalToken();
-  console.log("Awaited paypal token", auth, "for link", link);
   const result = await fetch(link.href, {
     headers: {
       Authorization: `Bearer ${auth.access_token}`,
@@ -66,13 +64,12 @@ app.post("/revalidate", async (req, res) => {
     category: "categories",
   };
   const data = req.body;
-  console.log("Revalidate called with req", data);
+  // console.log("Revalidate called with req", data);
   const { entry, model } = data;
   if (entry?.slug && urlPaths[model]) {
     // revalidate fossil & category pages only
     console.log(
-      "Calling revalidate for fossil path",
-      `${urlPaths[model]}/${entry.slug}`
+      `Calling revalidate for fossil path "${urlPaths[model]}/${entry.slug}"`
     );
     await fetch(
       `${process.env.PUBLIC_URL}/api/revalidate?path=${urlPaths[model]}/${entry.slug}&secret=${process.env.NEXT_REVALIDATE_SECRET}`
@@ -94,7 +91,6 @@ app.post("/revalidate", async (req, res) => {
 app.post("/sell", async (req, res) => {
   const body = req.body;
   const order = await validatatePayPalOrder(body);
-  console.log("Paypal link result", order);
   // get order reference and extract item id's to update backend
   const purchase = order.purchase_units.shift();
   const { reference_id } = purchase;
@@ -102,13 +98,31 @@ app.post("/sell", async (req, res) => {
   // e2a-[total]|[idsJoinedWith:]-[datetime]
   const parts = reference_id.split("-");
   const ids = parts[1].split("|").pop().split(":");
+  const results = [];
   // update backend
   await ids.map(async (id) => {
-    console.log("Calling strapi for id", id);
-    await fetchApi(`/fossils/${id}?populate=category`, {
+    console.log(`Calling Strapi for id "${id}"`);
+    const update = await fetchApi(`/fossils/${id}?populate=category`, {
       method: "PUT",
       body: JSON.stringify({ data: { sold: true } }),
     });
+    const result = await update.json();
+    // console.log(`Strapi update result`, result);
+    const entry = result.data.attributes;
+    // console.log(`Strapi update result category`, entry.category);
+    console.log(`Calling revalidate for fossil path "fossils/${entry.slug}"`);
+    await fetch(
+      `${process.env.PUBLIC_URL}/api/revalidate?path=fossils/${entry.slug}&secret=${process.env.NEXT_REVALIDATE_SECRET}`
+    );
+    const category = entry?.category?.data?.attributes;
+    if (category?.slug) {
+      console.log(
+        `Calling revalidate for category path "categories/${category.slug}"`
+      );
+      await fetch(
+        `${process.env.PUBLIC_URL}/api/revalidate?path=categories/${category.slug}&secret=${process.env.NEXT_REVALIDATE_SECRET}`
+      );
+    }
   });
 
   res.send(
