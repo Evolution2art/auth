@@ -2,10 +2,14 @@ const express = require("express");
 const fetch = require("node-fetch");
 const cors = require("cors");
 
+require("dotenv").config();
+
 const app = express();
 const port = process.env.PORT || 1338;
 const corsOptions = {
   origin: [
+    "http://localhost:3000",
+    "http://localhost:1337",
     "https://new.evolution2art.com",
     "https://backend.evolution2art.com",
     "https://evolution2art.com",
