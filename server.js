@@ -37,9 +37,7 @@ async function getPayPalToken() {
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       Authorization: `Basic ${Buffer.from(
-        process.env.PAYPAL_CLIENT_ID_TEST +
-          ":" +
-          process.env.PAYPAL_CLIENT_SECRET_TEST
+        process.env.PAYPAL_CLIENT_ID + ":" + process.env.PAYPAL_CLIENT_SECRET
       ).toString("base64")}`,
     },
     method: "POST",
@@ -73,18 +71,18 @@ app.post("/revalidate", async (req, res) => {
   const { entry, model } = data;
   if (entry?.slug && urlPaths[model]) {
     // revalidate fossil & category pages only
-    console.log(
-      `Calling revalidate for fossil path "${urlPaths[model]}/${entry.slug}"`
-    );
+    // console.log(
+    //   `Calling revalidate for fossil path "${urlPaths[model]}/${entry.slug}"`
+    // );
     await fetch(
       `${process.env.PUBLIC_URL}/api/revalidate?path=${urlPaths[model]}/${entry.slug}&secret=${process.env.NEXT_REVALIDATE_SECRET}`
     );
 
     // if fossil updated, also update its category page
     if (model === "fossil" && entry?.category?.slug) {
-      console.log(
-        `Calling revalidate for category path "categories/${entry.category.slug}"`
-      );
+      // console.log(
+      //   `Calling revalidate for category path "categories/${entry.category.slug}"`
+      // );
       await fetch(
         `${process.env.PUBLIC_URL}/api/revalidate?path=categories/${entry.category.slug}&secret=${process.env.NEXT_REVALIDATE_SECRET}`
       );
@@ -106,7 +104,7 @@ app.post("/sell", async (req, res) => {
   const results = [];
   // update backend
   await ids.map(async (id) => {
-    console.log(`Calling Strapi for id "${id}"`);
+    // console.log(`Calling Strapi for id "${id}"`);
     const update = await fetchApi(`/fossils/${id}?populate=category`, {
       method: "PUT",
       body: JSON.stringify({ data: { sold: true } }),
@@ -115,15 +113,15 @@ app.post("/sell", async (req, res) => {
     // console.log(`Strapi update result`, result);
     const entry = result.data.attributes;
     // console.log(`Strapi update result category`, entry.category);
-    console.log(`Calling revalidate for fossil path "fossils/${entry.slug}"`);
+    // console.log(`Calling revalidate for fossil path "fossils/${entry.slug}"`);
     await fetch(
       `${process.env.PUBLIC_URL}/api/revalidate?path=fossils/${entry.slug}&secret=${process.env.NEXT_REVALIDATE_SECRET}`
     );
     const category = entry?.category?.data?.attributes;
     if (category?.slug) {
-      console.log(
-        `Calling revalidate for category path "categories/${category.slug}"`
-      );
+      // console.log(
+      //   `Calling revalidate for category path "categories/${category.slug}"`
+      // );
       await fetch(
         `${process.env.PUBLIC_URL}/api/revalidate?path=categories/${category.slug}&secret=${process.env.NEXT_REVALIDATE_SECRET}`
       );
