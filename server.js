@@ -10,9 +10,10 @@ const corsOptions = {
   origin: [
     "http://localhost:3000",
     "http://localhost:1337",
+    "https://evolution2art.com",
+    "https://www.evolution2art.com",
     "https://new.evolution2art.com",
     "https://backend.evolution2art.com",
-    "https://evolution2art.com",
   ],
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
