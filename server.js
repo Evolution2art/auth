@@ -13,6 +13,7 @@ const corsOptions = {
     "https://evolution2art.com",
     "https://www.evolution2art.com",
     "https://new.evolution2art.com",
+    "https://auth.evolution2art.com",
     "https://backend.evolution2art.com",
   ],
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
@@ -57,10 +58,6 @@ async function validatatePayPalOrder(pp) {
   return await result.json();
 }
 
-app.get("/login", (req, res) => {
-  res.send("Hello world");
-});
-
 app.post("/revalidate", async (req, res) => {
   const urlPaths = {
     fossil: "fossils",
@@ -96,7 +93,7 @@ app.post("/sell", async (req, res) => {
   const order = await validatatePayPalOrder(body);
   // get order reference and extract item id's to update backend
   if (!order.purchase_units) {
-    console.log("auth sell endpoint called with empty purchase units", order);
+    // console.log("auth sell endpoint called with empty purchase units", order);
   }
   const purchase = order.purchase_units?.shift();
   const { reference_id } = purchase;
