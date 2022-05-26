@@ -95,7 +95,10 @@ app.post("/sell", async (req, res) => {
   const body = req.body;
   const order = await validatatePayPalOrder(body);
   // get order reference and extract item id's to update backend
-  const purchase = order.purchase_units.shift();
+  if (!order.purchase_units) {
+    console.log("auth sell endpoint called with empty purchase units", order);
+  }
+  const purchase = order.purchase_units?.shift();
   const { reference_id } = purchase;
   // reference is composed as follows
   // e2a-[total]|[idsJoinedWith:]-[datetime]
